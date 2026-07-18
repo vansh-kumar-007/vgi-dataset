@@ -18,7 +18,7 @@ PROCESSED_DIR = DATA_DIR / "processed"
 DOCS_DIR = PROJECT_ROOT / "docs"
 
 # --- Gold-tier filter (placeholder — will be set empirically in Phase 2) ---
-GOLD_MIN_STEAM_REVIEWS = None  # TODO: set after Phase 2 review-count distribution analysis
+GOLD_MIN_STEAM_REVIEWS = 100  # Set 2026-07-18 from real SteamSpy distribution analysis (82,521 candidates -> 23,066 at this threshold)
 
 # --- Steam API ---
 STEAM_APP_LIST_URL = "https://api.steampowered.com/ISteamApps/GetAppList/v2/"
