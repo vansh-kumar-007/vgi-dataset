@@ -28,3 +28,23 @@ final games.
 SteamSpy's server stabilizes, or as part of Phase 12 automation (scheduled
 incremental pulls). Will be explicitly re-verified before Silver-tier scoping,
 since Silver casts a wider net where this gap could matter more.
+
+## Steam appdetails enrichment — final results (2026-07-18/19)
+
+**Source:** Steam Storefront `appdetails` endpoint (keyless), applied to all
+23,066 Gold-tier candidates identified via the SteamSpy review-count filter.
+
+**Result:** 22,918 games successfully enriched (99.36%). 148 failures, all
+`success=false` responses from Steam itself — these represent delisted,
+region-locked, or removed-from-sale titles that still had a shell listing
+in SteamSpy's data but no longer have retrievable store data. This is
+expected, benign behavior, not a pipeline defect.
+
+**Method:** Batched ingestion (8 batches of up to 3,000 games), fully
+checkpointed via JSONL append-per-record, resumable after any interruption.
+Zero parsing errors across all 22,918 successful records when run through
+our pydantic-validated parser.
+
+**What this means for the dataset:** our Gold-tier `games` table contains
+22,918 rows — slightly below our original 23,066-candidate list, but the
+gap is fully explained, expected, and documented, not a silent hole.

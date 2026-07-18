@@ -6,5 +6,6 @@ print(f"Total records: {len(records)}")
 failed = [r for r in records if not r["success"]]
 print(f"Failed: {len(failed)}")
 
-for f in failed[:10]:
+print("\nMost recent 15 failures (from latest batch):")
+for f in failed[-15:]:
     print(f"  appid {f['appid']}: {f['error']}")
