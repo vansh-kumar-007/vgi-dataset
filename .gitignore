@@ -40,3 +40,7 @@ Thumbs.db
 # --- Logs ---
 *.log
 logs/
+
+# --- Kaggle upload staging folders (large data files, not source code) ---
+kaggle_upload/
+kaggle_metadata_check/
