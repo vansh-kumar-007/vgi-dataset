@@ -1,0 +1,438 @@
+{
+  "title": "Ultimate Video Game Intelligence (Gold Tier)",
+  "id": "vanshkumar007/ultimate-video-game-intelligence-dataset-gold",
+  "subtitle": "22,912 curated Steam games across 14 relational tables for ML and RAG",
+  "description": "# The Ultimate Video Game Intelligence Dataset \u2014 Gold Tier\n\nA high-quality, relational, multi-table dataset covering **22,912 curated Steam games**, built for machine learning, deep learning, recommendation systems, RAG, knowledge graphs, NLP, and general game-industry analytics.\n\nThis is **not a single CSV**. It is a normalized, relational dataset spanning 14 interconnected tables \u2014 games, developers, publishers, genres, categories, screenshots, trailers, achievements, DLC relationships, and content ratings \u2014 designed the way a real production database would be.\n\n## Why \"Gold Tier\"?\n\nThis is the first of a planned multi-tier release. Rather than scraping every Steam listing indiscriminately (including shovelware, asset flips, and abandoned listings), Gold Tier applies a deliberate, evidence-based quality filter: **every game has at least 100 total Steam reviews**, a threshold chosen empirically (see Methodology below) to balance genuine breadth with data quality. Silver and Bronze tiers (broader coverage, lighter enrichment) are planned as future releases.\n\n## Tables\n\n| Table | Rows | Description |\n|---|---|---|\n| `games` | 22,912 | Core entity table \u2014 one row per game |\n| `developers` | 14,842 | Unique developer studios |\n| `publishers` | 10,497 | Unique publishers |\n| `game_developers` | 25,443 | Many-to-many: games \u2194 developers |\n| `game_publishers` | 24,763 | Many-to-many: games \u2194 publishers |\n| `genres` | 28 | Steam's genre taxonomy |\n| `game_genres` | 65,436 | Many-to-many: games \u2194 genres |\n| `categories` | 65 | Steam's feature/category taxonomy (e.g. \"Single-player\", \"Steam Achievements\") |\n| `game_categories` | 147,785 | Many-to-many: games \u2194 categories |\n| `screenshots` | 243,512 | Screenshot URLs (reference only, not hosted images) |\n| `trailers` | 41,618 | Trailer/movie URLs (reference only) |\n| `achievements` | 160,375 | Featured achievements per game (see limitation below) |\n| `dlc` | 42,729 | Base game \u2192 DLC appid relationships |\n| `content_ratings` | 76,125 | Regional content rating board classifications (ESRB/PEGI/etc.) |\n\nBoth CSV and Parquet versions of every table are provided.\n\n## Schema \u2014 `games` (core table)\n\n| Column | Type | Description |\n|---|---|---|\n| `game_id` | string | Internal stable identifier (primary key across all tables) |\n| `steam_appid` | int | Steam's own App ID |\n| `name` | string | Game title |\n| `type` | string | Always \"game\" in this release (demos/other types filtered out) |\n| `is_free` | bool | Whether the game is free-to-play |\n| `required_age` | int | Age rating requirement, if any |\n| `short_description` | string | Steam's short store description |\n| `detailed_description` | string | Full store description (contains embedded HTML \u2014 see Known Limitations) |\n| `release_date` | date (nullable) | Release date, if known |\n| `release_date_unreleased` | bool | True if the game was unreleased/had no parseable date at collection time |\n| `header_image_url` | string (nullable) | Store header image URL |\n| `supports_windows` / `supports_mac` / `supports_linux` | bool | Platform support flags |\n\nOther tables follow standard relational conventions \u2014 junction tables use `game_id` + the related entity's own ID; see each CSV's header row for exact columns.\n\n## Methodology\n\n### Sourcing\n1. **SteamSpy** (`steamspy.com`) provided the candidate universe of Steam apps, including review counts used for filtering.\n2. **Steam Storefront `appdetails`** (unofficial, keyless) provided all enrichment data: descriptions, genres, developers, publishers, screenshots, trailers, achievements, DLC, and content ratings.\n\n### Gold-tier threshold selection\nThe \u2265100-review threshold was chosen empirically, not guessed in advance. Against a candidate pool of 82,521 SteamSpy-listed apps, review-count thresholds produced the following candidate pool sizes:\n\n| Threshold | Candidate games |\n|---|---|\n| \u226510 reviews | 56,389 |\n| \u226525 reviews | 40,745 |\n| \u226550 reviews | 30,661 |\n| **\u2265100 reviews (selected)** | **23,066** |\n| \u2265200 reviews | 17,062 |\n| \u2265500 reviews | 10,871 |\n\n100 reviews was selected as the best balance between dataset size and filtering out low-signal/shovelware listings, while avoiding over-reliance on critic-score-based filters (which would have systematically excluded indie titles).\n\n### Enrichment success rate\nOf 23,066 Gold-tier candidates, 22,918 (99.36%) were successfully enriched via Steam's appdetails endpoint. A further 6 were removed during quality review (4 demos incorrectly typed, 2 hollow/broken listings with empty names on Steam's own side), leaving **22,912 final games**.\n\n## Known Limitations\n\n**SteamSpy candidate pool is a partial pull.** Our SteamSpy-derived candidate universe (82,521 apps) does not represent SteamSpy's complete catalog \u2014 pagination was halted due to server-side instability on SteamSpy's end. Given SteamSpy's default sort (descending owner count), the missing apps are expected to be long-tail, low-visibility titles unlikely to meet the \u2265100-review Gold threshold regardless. Impact on Gold-tier composition is expected to be minimal.\n\n**Achievements are a \"highlighted\" subset, not exhaustive.** Steam's keyless Storefront API only exposes a curated highlight list (typically up to ~10 per game) rather than the complete achievement schema. Full achievement lists require an authenticated Steam Web API key (which itself requires a Steam account with a qualifying purchase) \u2014 out of scope for this release. The `achievements` table should be treated as a representative sample, not a complete list, for any given game.\n\n**Descriptions contain raw HTML.** The `detailed_description` field preserves Steam's original HTML formatting (e.g. `<br>`, `<ul>` tags) rather than being pre-cleaned. This is intentional \u2014 it preserves full fidelity to the source \u2014 but downstream NLP/embedding use cases should strip HTML first.\n\n**148 candidates could not be enriched.** These returned `success: false` from Steam's own API, consistent with delisted, region-restricted, or removed-from-sale titles. They are simply absent from the final tables rather than included with blank data.\n\n## License & Attribution\n\nThis dataset is built from publicly accessible Steam and SteamSpy data.\n- **Steam Storefront API / SteamSpy**: No official redistribution grant exists, but this is a long-established, widely-used practice in the Kaggle and academic research community.\n- **No copyrighted media (screenshots, trailers, box art) is redistributed** \u2014 only reference URLs are included, per this project's data ethics policy.\n- Users of this dataset should independently review Valve's and SteamSpy's terms of use for their own downstream use cases.\n\n**License: CC BY-NC-SA 4.0** (Attribution-NonCommercial-ShareAlike). This dataset may be used and modified freely for non-commercial purposes (research, education, personal projects, competitions) with attribution, and any derivative datasets must carry the same license terms.\n\n## Citation\n\nIf you use this dataset in your work, please cite:\nVansh Kumar. \"The Ultimate Video Game Intelligence Dataset \u2014 Gold Tier.\" Kaggle, 2026.\n\n## Version History\n\n- **v1.0.0** (2026-07-19) \u2014 Initial Gold Tier release. 22,912 games, 14 relational tables.\n\n## Roadmap\n\n- Silver Tier: broader coverage (~100,000+ games), lighter enrichment depth\n- Bronze Tier: maximal coverage (500,000+ target), minimal metadata\n- Planned enrichment: pricing history, review sentiment, knowledge graph exports, semantic embeddings\n",
+  "licenses": [
+    {
+      "name": "CC-BY-NC-SA-4.0"
+    }
+  ],
+  "keywords": [
+    "video games",
+    "gaming",
+    "steam",
+    "relational database",
+    "recommender systems"
+  ],
+  "resources": [
+    {
+      "path": "games.csv",
+      "description": "Core entity table. One row per game, with title, description, release info, and platform support.",
+      "schema": {
+        "fields": [
+          {
+            "name": "game_id",
+            "title": "Internal stable identifier, primary key linking this row to the games table.",
+            "description": "Internal stable identifier, primary key linking this row to the games table.",
+            "type": "string"
+          },
+          {
+            "name": "steam_appid",
+            "title": "Steam's own App ID for this game.",
+            "description": "Steam's own App ID for this game.",
+            "type": "integer"
+          },
+          {
+            "name": "name",
+            "title": "Game title as listed on Steam.",
+            "description": "Game title as listed on Steam.",
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "title": "Steam listing type (always 'game' in this Gold-tier release).",
+            "description": "Steam listing type (always 'game' in this Gold-tier release).",
+            "type": "string"
+          },
+          {
+            "name": "is_free",
+            "title": "Whether the game is free-to-play.",
+            "description": "Whether the game is free-to-play.",
+            "type": "boolean"
+          },
+          {
+            "name": "required_age",
+            "title": "Minimum age requirement, if any (0 if none specified).",
+            "description": "Minimum age requirement, if any (0 if none specified).",
+            "type": "integer"
+          },
+          {
+            "name": "short_description",
+            "title": "Steam's short store description.",
+            "description": "Steam's short store description.",
+            "type": "string"
+          },
+          {
+            "name": "detailed_description",
+            "title": "Full store description. Contains raw embedded HTML formatting.",
+            "description": "Full store description. Contains raw embedded HTML formatting.",
+            "type": "string"
+          },
+          {
+            "name": "release_date",
+            "title": "Release date, if known and parseable.",
+            "description": "Release date, if known and parseable.",
+            "type": "string"
+          },
+          {
+            "name": "release_date_unreleased",
+            "title": "True if the game was unreleased or had no parseable release date at collection time.",
+            "description": "True if the game was unreleased or had no parseable release date at collection time.",
+            "type": "boolean"
+          },
+          {
+            "name": "header_image_url",
+            "title": "URL to the game's Steam store header image (reference only, not hosted).",
+            "description": "URL to the game's Steam store header image (reference only, not hosted).",
+            "type": "string"
+          },
+          {
+            "name": "supports_windows",
+            "title": "Whether the game supports Windows.",
+            "description": "Whether the game supports Windows.",
+            "type": "boolean"
+          },
+          {
+            "name": "supports_mac",
+            "title": "Whether the game supports macOS.",
+            "description": "Whether the game supports macOS.",
+            "type": "boolean"
+          },
+          {
+            "name": "supports_linux",
+            "title": "Whether the game supports Linux.",
+            "description": "Whether the game supports Linux.",
+            "type": "boolean"
+          }
+        ]
+      }
+    },
+    {
+      "path": "developers.csv",
+      "description": "Unique developer studios referenced across the dataset.",
+      "schema": {
+        "fields": [
+          {
+            "name": "developer_id",
+            "title": "Internal stable identifier for this developer studio.",
+            "description": "Internal stable identifier for this developer studio.",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "title": "Developer studio name.",
+            "description": "Developer studio name.",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "publishers.csv",
+      "description": "Unique publishers referenced across the dataset.",
+      "schema": {
+        "fields": [
+          {
+            "name": "publisher_id",
+            "title": "Internal stable identifier for this publisher.",
+            "description": "Internal stable identifier for this publisher.",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "title": "Publisher name.",
+            "description": "Publisher name.",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "game_developers.csv",
+      "description": "Many-to-many relationship: which developer(s) made which game(s).",
+      "schema": {
+        "fields": [
+          {
+            "name": "game_id",
+            "title": "Internal stable identifier, primary key linking this row to the games table.",
+            "description": "Internal stable identifier, primary key linking this row to the games table.",
+            "type": "string"
+          },
+          {
+            "name": "developer_id",
+            "title": "Internal stable identifier for this developer studio.",
+            "description": "Internal stable identifier for this developer studio.",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "game_publishers.csv",
+      "description": "Many-to-many relationship: which publisher(s) released which game(s).",
+      "schema": {
+        "fields": [
+          {
+            "name": "game_id",
+            "title": "Internal stable identifier, primary key linking this row to the games table.",
+            "description": "Internal stable identifier, primary key linking this row to the games table.",
+            "type": "string"
+          },
+          {
+            "name": "publisher_id",
+            "title": "Internal stable identifier for this publisher.",
+            "description": "Internal stable identifier for this publisher.",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "genres.csv",
+      "description": "Steam's genre taxonomy (e.g. Action, RPG, Strategy).",
+      "schema": {
+        "fields": [
+          {
+            "name": "genre_id",
+            "title": "Steam's own genre identifier.",
+            "description": "Steam's own genre identifier.",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "title": "Genre name (e.g. Action, RPG, Strategy).",
+            "description": "Genre name (e.g. Action, RPG, Strategy).",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "game_genres.csv",
+      "description": "Many-to-many relationship: which genre(s) apply to which game(s).",
+      "schema": {
+        "fields": [
+          {
+            "name": "game_id",
+            "title": "Internal stable identifier, primary key linking this row to the games table.",
+            "description": "Internal stable identifier, primary key linking this row to the games table.",
+            "type": "string"
+          },
+          {
+            "name": "genre_id",
+            "title": "Steam's own genre identifier.",
+            "description": "Steam's own genre identifier.",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "categories.csv",
+      "description": "Steam's feature/category taxonomy (e.g. Single-player, Steam Achievements, Multiplayer).",
+      "schema": {
+        "fields": [
+          {
+            "name": "category_id",
+            "title": "Steam's own feature/category identifier (e.g. 'Single-player', 'Steam Achievements').",
+            "description": "Steam's own feature/category identifier (e.g. 'Single-player', 'Steam Achievements').",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "title": "Category/feature name (e.g. Single-player, Steam Achievements).",
+            "description": "Category/feature name (e.g. Single-player, Steam Achievements).",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "game_categories.csv",
+      "description": "Many-to-many relationship: which categories/features apply to which game(s).",
+      "schema": {
+        "fields": [
+          {
+            "name": "game_id",
+            "title": "Internal stable identifier, primary key linking this row to the games table.",
+            "description": "Internal stable identifier, primary key linking this row to the games table.",
+            "type": "string"
+          },
+          {
+            "name": "category_id",
+            "title": "Steam's own feature/category identifier (e.g. 'Single-player', 'Steam Achievements').",
+            "description": "Steam's own feature/category identifier (e.g. 'Single-player', 'Steam Achievements').",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "screenshots.csv",
+      "description": "Screenshot reference URLs per game (images not hosted, only linked).",
+      "schema": {
+        "fields": [
+          {
+            "name": "game_id",
+            "title": "Internal stable identifier, primary key linking this row to the games table.",
+            "description": "Internal stable identifier, primary key linking this row to the games table.",
+            "type": "string"
+          },
+          {
+            "name": "screenshot_id",
+            "title": "Identifier for this screenshot as assigned by Steam.",
+            "description": "Identifier for this screenshot as assigned by Steam.",
+            "type": "string"
+          },
+          {
+            "name": "thumbnail_url",
+            "title": "URL to a thumbnail-sized image (reference only, not hosted).",
+            "description": "URL to a thumbnail-sized image (reference only, not hosted).",
+            "type": "string"
+          },
+          {
+            "name": "full_url",
+            "title": "URL to the full-size image (reference only, not hosted).",
+            "description": "URL to the full-size image (reference only, not hosted).",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "trailers.csv",
+      "description": "Trailer/movie reference URLs per game (videos not hosted, only linked).",
+      "schema": {
+        "fields": [
+          {
+            "name": "game_id",
+            "title": "Internal stable identifier, primary key linking this row to the games table.",
+            "description": "Internal stable identifier, primary key linking this row to the games table.",
+            "type": "string"
+          },
+          {
+            "name": "trailer_id",
+            "title": "Identifier for this trailer/movie as assigned by Steam.",
+            "description": "Identifier for this trailer/movie as assigned by Steam.",
+            "type": "string"
+          },
+          {
+            "name": "name",
+            "title": "Trailer/movie title as labeled by Steam.",
+            "description": "Trailer/movie title as labeled by Steam.",
+            "type": "string"
+          },
+          {
+            "name": "thumbnail_url",
+            "title": "URL to a thumbnail-sized image (reference only, not hosted).",
+            "description": "URL to a thumbnail-sized image (reference only, not hosted).",
+            "type": "string"
+          },
+          {
+            "name": "webm_url",
+            "title": "URL to the WebM version of the trailer, if available.",
+            "description": "URL to the WebM version of the trailer, if available.",
+            "type": "string"
+          },
+          {
+            "name": "mp4_url",
+            "title": "URL to the MP4 version of the trailer, if available.",
+            "description": "URL to the MP4 version of the trailer, if available.",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "path": "achievements.csv",
+      "description": "Featured achievements per game, as exposed by Steam's public API (partial subset, not exhaustive).",
+      "schema": {
+        "fields": [
+          {
+            "name": "game_id",
+            "title": "Internal stable identifier, primary key linking this row to the games table.",
+            "description": "Internal stable identifier, primary key linking this row to the games table.",
+            "type": "string"
+          },
+          {
+            "name": "achievement_name",
+            "title": "Internal name of the achievement.",
+            "description": "Internal name of the achievement.",
+            "type": "string"
+          },
+          {
+            "name": "description",
+            "title": "Achievement description text, where available.",
+            "description": "Achievement description text, where available.",
+            "type": "string"
+          },
+          {
+            "name": "icon_url",
+            "title": "URL to the achievement's icon image (reference only, not hosted).",
+            "description": "URL to the achievement's icon image (reference only, not hosted).",
+            "type": "string"
+          },
+          {
+            "name": "hidden",
+            "title": "Whether this achievement is a hidden/secret achievement.",
+            "description": "Whether this achievement is a hidden/secret achievement.",
+            "type": "boolean"
+          }
+        ]
+      }
+    },
+    {
+      "path": "dlc.csv",
+      "description": "Base game to downloadable content (DLC) relationships.",
+      "schema": {
+        "fields": [
+          {
+            "name": "game_id",
+            "title": "Internal stable identifier, primary key linking this row to the games table.",
+            "description": "Internal stable identifier, primary key linking this row to the games table.",
+            "type": "string"
+          },
+          {
+            "name": "dlc_steam_appid",
+            "title": "Steam App ID of a piece of downloadable content (DLC) for this base game.",
+            "description": "Steam App ID of a piece of downloadable content (DLC) for this base game.",
+            "type": "integer"
+          }
+        ]
+      }
+    },
+    {
+      "path": "content_ratings.csv",
+      "description": "Regional content rating board classifications per game (e.g. ESRB, PEGI).",
+      "schema": {
+        "fields": [
+          {
+            "name": "game_id",
+            "title": "Internal stable identifier, primary key linking this row to the games table.",
+            "description": "Internal stable identifier, primary key linking this row to the games table.",
+            "type": "string"
+          },
+          {
+            "name": "rating_board",
+            "title": "Regional content rating board (e.g. 'esrb', 'pegi', 'usk').",
+            "description": "Regional content rating board (e.g. 'esrb', 'pegi', 'usk').",
+            "type": "string"
+          },
+          {
+            "name": "rating_value",
+            "title": "The rating value assigned by this board, if available.",
+            "description": "The rating value assigned by this board, if available.",
+            "type": "string"
+          },
+          {
+            "name": "descriptors",
+            "title": "Content descriptors associated with this rating (e.g. violence, language).",
+            "description": "Content descriptors associated with this rating (e.g. violence, language).",
+            "type": "string"
+          }
+        ]
+      }
+    }
+  ]
+}
