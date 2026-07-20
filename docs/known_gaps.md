@@ -48,3 +48,9 @@ our pydantic-validated parser.
 **What this means for the dataset:** our Gold-tier `games` table contains
 22,918 rows — slightly below our original 23,066-candidate list, but the
 gap is fully explained, expected, and documented, not a silent hole.
+
+## Price/free-status snapshot discrepancy (SteamSpy merge, 2026-07-19)
+
+**What happened:** `is_free` (from Steam's appdetails, Phase 2) and `price_usd` (from SteamSpy, merged later) can disagree for 1,311 games — `is_free=False` while `price_usd=0`. Spot-checking confirms this reflects genuine snapshot timing differences, not a data error: e.g. *Rocket League* and *Fall Guys* both launched as paid games and later became permanently free-to-play, so which field reflects "current" status depends on when each source's snapshot was taken.
+
+**Guidance for users:** `is_free` and `price_usd` are each internally consistent with their own source and collection time, but should not be assumed to represent the exact same moment. For most reliable free/paid classification, `is_free` is the more current signal since it was collected in the same pass as the rest of the `games` table's core fields.

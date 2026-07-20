@@ -50,6 +50,12 @@ COLUMN_DESCRIPTIONS = {
     "rating_board": "Regional content rating board (e.g. 'esrb', 'pegi', 'usk').",
     "rating_value": "The rating value assigned by this board, if available.",
     "descriptors": "Content descriptors associated with this rating (e.g. violence, language).",
+    "positive_reviews": "Total positive review count, as reported by SteamSpy.",
+    "negative_reviews": "Total negative review count, as reported by SteamSpy.",
+    "review_score": "Positive review ratio (positive / total reviews), range 0-1. Useful as a regression target.",
+    "owners_min": "Estimated minimum owner count, as reported by SteamSpy (range-based estimate, not exact).",
+    "owners_max": "Estimated maximum owner count, as reported by SteamSpy (range-based estimate, not exact).",
+    "price_usd": "Price in USD at time of SteamSpy collection. May differ from is_free if the game's pricing changed between data collection passes (see known_gaps.md).",
 }
 
 TABLE_DESCRIPTIONS = {
