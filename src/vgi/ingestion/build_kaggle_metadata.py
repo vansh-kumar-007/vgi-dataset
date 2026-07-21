@@ -64,6 +64,7 @@ COLUMN_DESCRIPTIONS = {
 
 TABLE_DESCRIPTIONS = {
     "games": "Core entity table. One row per game, with title, description, release info, and platform support.",
+    "embeddings": "Sentence embeddings (384-dim, all-MiniLM-L6-v2) for semantic search. One row per game, pre-normalized (L2 norm = 1.0). Parquet only.",
     "developers": "Unique developer studios referenced across the dataset.",
     "publishers": "Unique publishers referenced across the dataset.",
     "game_developers": "Many-to-many relationship: which developer(s) made which game(s).",
@@ -111,16 +112,31 @@ def build_resources():
         df = pd.read_parquet(PROCESSED_DIR / f"{table}.parquet")
         fields = []
         overrides = TABLE_COLUMN_OVERRIDES.get(table, {})
-        for col in df.columns:
-            desc = overrides.get(col) or COLUMN_DESCRIPTIONS.get(col, f"See table description for context on '{col}'.")
-            fields.append({
-                "name": col,
-                "title": desc,
-                "description": desc,
-                "type": infer_kaggle_type(df[col].dtype),
-            })
+
+        if table == "embeddings":
+            # Special case: 384 numbered dimension columns get one shared
+            # description rather than 384 individual (meaningless) entries.
+            for col in df.columns:
+                if col == "game_id":
+                    desc = COLUMN_DESCRIPTIONS["game_id"]
+                else:
+                    desc = "One dimension of the 384-dim sentence embedding vector. See embeddings_methodology.md for full detail."
+                fields.append({
+                    "name": col, "title": desc, "description": desc,
+                    "type": infer_kaggle_type(df[col].dtype),
+                })
+        else:
+            for col in df.columns:
+                desc = overrides.get(col) or COLUMN_DESCRIPTIONS.get(col, f"See table description for context on '{col}'.")
+                fields.append({
+                    "name": col, "title": desc, "description": desc,
+                    "type": infer_kaggle_type(df[col].dtype),
+                })
+
+        # embeddings table is Parquet-only — point resource path there, not .csv
+        file_ext = "parquet" if table == "embeddings" else "csv"
         resources.append({
-            "path": f"{table}.csv",
+            "path": f"{table}.{file_ext}",
             "description": table_desc,
             "schema": {"fields": fields},
         })

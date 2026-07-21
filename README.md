@@ -26,8 +26,11 @@ This is the first of a planned multi-tier release. Rather than scraping every St
 | `achievements` | 160,375 | Featured achievements per game (see limitation below) |
 | `dlc` | 42,729 | Base game → DLC appid relationships |
 | `content_ratings` | 76,125 | Regional content rating board classifications (ESRB/PEGI/etc.) |
+| `embeddings` | 22,912 | Sentence embeddings (384-dim, all-MiniLM-L6-v2) per game. Parquet only. |
 
 Both CSV and Parquet versions of every table are provided.
+
+Note: `games` table now also includes `valve_review_score_desc`, `valve_total_positive`, `valve_total_negative`, `valve_total_reviews` — official Valve review data, cross-validated against SteamSpy-derived counts (see Known Limitations).
 
 ## Schema — `games` (core table)
 
@@ -71,6 +74,9 @@ The ≥100-review threshold was chosen empirically, not guessed in advance. Agai
 ### Enrichment success rate
 Of 23,066 Gold-tier candidates, 22,918 (99.36%) were successfully enriched via Steam's appdetails endpoint. A further 6 were removed during quality review (4 demos incorrectly typed, 2 hollow/broken listings with empty names on Steam's own side), leaving **22,912 final games**.
 
+### Semantic embeddings
+See `embeddings_methodology.md` in this dataset's source repository for full details. Summary: `all-MiniLM-L6-v2` sentence embeddings, one 384-dimensional vector per game, pre-normalized (L2 norm = 1.0), enabling direct cosine-similarity search via dot product.
+
 ## Known Limitations
 
 **SteamSpy candidate pool is a partial pull.** Our SteamSpy-derived candidate universe (82,521 apps) does not represent SteamSpy's complete catalog — pagination was halted due to server-side instability on SteamSpy's end. Given SteamSpy's default sort (descending owner count), the missing apps are expected to be long-tail, low-visibility titles unlikely to meet the ≥100-review Gold threshold regardless. Impact on Gold-tier composition is expected to be minimal.
@@ -80,6 +86,8 @@ Of 23,066 Gold-tier candidates, 22,918 (99.36%) were successfully enriched via S
 **Descriptions contain raw HTML.** The `detailed_description` field preserves Steam's original HTML formatting (e.g. `<br>`, `<ul>` tags) rather than being pre-cleaned. This is intentional — it preserves full fidelity to the source — but downstream NLP/embedding use cases should strip HTML first.
 
 **148 candidates could not be enriched.** These returned `success: false` from Steam's own API, consistent with delisted, region-restricted, or removed-from-sale titles. They are simply absent from the final tables rather than included with blank data.
+
+**SteamSpy and Valve review counts can diverge.** For ~90% of games Valve's official counts are modestly higher (median difference: 28 reviews), consistent with ordinary snapshot-timing drift, though a minority of games show larger gaps. Root cause not conclusively determined — see `known_gaps.md` for full analysis. `valve_total_reviews` (first-party) should be treated as more authoritative than `positive_reviews`/`negative_reviews` (third-party, SteamSpy-derived).
 
 ## License & Attribution
 
