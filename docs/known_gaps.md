@@ -54,3 +54,28 @@ gap is fully explained, expected, and documented, not a silent hole.
 **What happened:** `is_free` (from Steam's appdetails, Phase 2) and `price_usd` (from SteamSpy, merged later) can disagree for 1,311 games — `is_free=False` while `price_usd=0`. Spot-checking confirms this reflects genuine snapshot timing differences, not a data error: e.g. *Rocket League* and *Fall Guys* both launched as paid games and later became permanently free-to-play, so which field reflects "current" status depends on when each source's snapshot was taken.
 
 **Guidance for users:** `is_free` and `price_usd` are each internally consistent with their own source and collection time, but should not be assumed to represent the exact same moment. For most reliable free/paid classification, `is_free` is the more current signal since it was collected in the same pass as the rest of the `games` table's core fields.
+
+## SteamSpy vs. Valve review count discrepancy (2026-07-19)
+
+**What we found:** Comparing SteamSpy's review counts (collected Phase 2) against
+Valve's own official review summary (collected Phase 4) for the same 22,912 games:
+- Valve's total is higher for 20,561 games (90%), matches exactly for 574, and is
+  lower for 1,777.
+- Median difference is small (28 reviews) — consistent with ordinary snapshot-timing
+  drift between two collection passes on different dates.
+- A minority of games show large gaps (e.g. Call of Duty: Black Ops III: -56,017;
+  Starbound: -41,827) — Valve's count meaningfully lower than SteamSpy's for these.
+
+**Root cause: not conclusively determined.** We tested and ruled out one hypothesis
+(that our `filter=recent` request parameter caused an undercounted total) — Valve's
+own API documentation states `total_reviews` reflects all reviews matching the
+query parameters (which we set to `review_type=all`, `purchase_type=all`), not a
+recency-limited subset. The most plausible remaining explanation is that our two
+sources were collected on different dates, and SteamSpy — a third-party aggregator —
+may itself lag behind Steam's live totals with its own update cadence, but this is
+not independently confirmed.
+
+**Guidance for users:** for the most current review data, `valve_total_reviews`
+and `valve_review_score_desc` (official, first-party) should be treated as more
+authoritative than `positive_reviews`/`negative_reviews` (SteamSpy-derived,
+third-party). Both are retained for transparency and cross-validation purposes.

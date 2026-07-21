@@ -56,6 +56,10 @@ COLUMN_DESCRIPTIONS = {
     "owners_min": "Estimated minimum owner count, as reported by SteamSpy (range-based estimate, not exact).",
     "owners_max": "Estimated maximum owner count, as reported by SteamSpy (range-based estimate, not exact).",
     "price_usd": "Price in USD at time of SteamSpy collection. May differ from is_free if the game's pricing changed between data collection passes (see known_gaps.md).",
+    "valve_review_score_desc": "Valve's official review category (e.g. 'Very Positive', 'Mixed'). Games with too few reviews for Valve to categorize are labeled 'Too Few Reviews'.",
+    "valve_total_positive": "Total positive reviews per Valve's official Steam review API (first-party, distinct from SteamSpy-derived positive_reviews).",
+    "valve_total_negative": "Total negative reviews per Valve's official Steam review API.",
+    "valve_total_reviews": "Total reviews per Valve's official Steam review API. See known_gaps.md for a documented discrepancy analysis vs. SteamSpy-derived counts.",
 }
 
 TABLE_DESCRIPTIONS = {
