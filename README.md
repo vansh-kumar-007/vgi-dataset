@@ -27,6 +27,8 @@ This is the first of a planned multi-tier release. Rather than scraping every St
 | `dlc` | 42,729 | Base game → DLC appid relationships |
 | `content_ratings` | 76,125 | Regional content rating board classifications (ESRB/PEGI/etc.) |
 | `embeddings` | 22,912 | Sentence embeddings (384-dim, all-MiniLM-L6-v2) per game. Parquet only. |
+| `kg_nodes` | 48,344 | Knowledge graph nodes: games, developers, publishers, genres, categories |
+| `kg_edges` | 263,422 | Knowledge graph edges: directed, typed relationships |
 
 Both CSV and Parquet versions of every table are provided.
 
@@ -77,6 +79,9 @@ Of 23,066 Gold-tier candidates, 22,918 (99.36%) were successfully enriched via S
 ### Semantic embeddings
 See `embeddings_methodology.md` in this dataset's source repository for full details. Summary: `all-MiniLM-L6-v2` sentence embeddings, one 384-dimensional vector per game, pre-normalized (L2 norm = 1.0), enabling direct cosine-similarity search via dot product.
 
+### Knowledge graph export
+See `knowledge_graph_export.md` in this dataset's source repository for full details. Summary: directed, typed graph (games → developers/publishers/genres/categories), standard nodes/edges format compatible with Neo4j, Gephi, and NetworkX.
+
 ## Known Limitations
 
 **SteamSpy candidate pool is a partial pull.** Our SteamSpy-derived candidate universe (82,521 apps) does not represent SteamSpy's complete catalog — pagination was halted due to server-side instability on SteamSpy's end. Given SteamSpy's default sort (descending owner count), the missing apps are expected to be long-tail, low-visibility titles unlikely to meet the ≥100-review Gold threshold regardless. Impact on Gold-tier composition is expected to be minimal.
@@ -88,6 +93,8 @@ See `embeddings_methodology.md` in this dataset's source repository for full det
 **148 candidates could not be enriched.** These returned `success: false` from Steam's own API, consistent with delisted, region-restricted, or removed-from-sale titles. They are simply absent from the final tables rather than included with blank data.
 
 **SteamSpy and Valve review counts can diverge.** For ~90% of games Valve's official counts are modestly higher (median difference: 28 reviews), consistent with ordinary snapshot-timing drift, though a minority of games show larger gaps. Root cause not conclusively determined — see `known_gaps.md` for full analysis. `valve_total_reviews` (first-party) should be treated as more authoritative than `positive_reviews`/`negative_reviews` (third-party, SteamSpy-derived).
+
+**duplicate rows found and fixed in `game_developers`.** During knowledge graph export validation, 5 exact duplicate rows were discovered in the `game_developers` junction table and removed at the source. This was a genuine small Phase 2 data gap, now corrected — see `knowledge_graph_export.md` for details.
 
 ## License & Attribution
 
@@ -105,8 +112,7 @@ Vansh Kumar. "The Ultimate Video Game Intelligence Dataset — Gold Tier." Kaggl
 
 ## Version History
 
-- **v1.0.0** (2026-07-19) — Initial Gold Tier release. 22,912 games, 14 relational tables.
-
+- **v1.1.0** (2026-07-19) — Added Phase 4 (Valve review data), Phase 8 (semantic embeddings), Phase 9 (knowledge graph export). Fixed 5 duplicate rows in game_developers. 17 total tables.
 ## Roadmap
 
 - Silver Tier: broader coverage (~100,000+ games), lighter enrichment depth

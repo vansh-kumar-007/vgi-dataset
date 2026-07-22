@@ -60,6 +60,11 @@ COLUMN_DESCRIPTIONS = {
     "valve_total_positive": "Total positive reviews per Valve's official Steam review API (first-party, distinct from SteamSpy-derived positive_reviews).",
     "valve_total_negative": "Total negative reviews per Valve's official Steam review API.",
     "valve_total_reviews": "Total reviews per Valve's official Steam review API. See known_gaps.md for a documented discrepancy analysis vs. SteamSpy-derived counts.",
+    "id": "Unique node identifier. Genre/category IDs are prefixed (genre_, cat_) to avoid collisions with Steam's independent ID sequences for each taxonomy.",
+    "label": "Human-readable name of this node (game title, developer name, genre name, etc.).",
+    "source": "Node ID this edge originates from (always a game in this export).",
+    "target": "Node ID this edge points to (the related developer/publisher/genre/category).",
+    "relation": "The typed relationship this edge represents (e.g. 'developed_by', 'has_genre').",
 }
 
 TABLE_DESCRIPTIONS = {
@@ -78,6 +83,8 @@ TABLE_DESCRIPTIONS = {
     "achievements": "Featured achievements per game, as exposed by Steam's public API (partial subset, not exhaustive).",
     "dlc": "Base game to downloadable content (DLC) relationships.",
     "content_ratings": "Regional content rating board classifications per game (e.g. ESRB, PEGI).",
+    "kg_nodes": "Knowledge graph nodes: games, developers, publishers, genres, categories as typed graph entities. See knowledge_graph_export.md for full documentation.",
+    "kg_edges": "Knowledge graph edges: directed, typed relationships (developed_by, published_by, has_genre, has_category). See knowledge_graph_export.md for full documentation.",
 }
 
 PANDAS_TO_KAGGLE_TYPE = {
